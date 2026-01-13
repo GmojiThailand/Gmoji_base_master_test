@@ -7,6 +7,8 @@ const body = require('koa-better-body');
 const cors = require('koa-cors');
 const SDK = require('sdk');
 const swagger = require('swagger-koa');
+const fs = require('fs');
+const path = require('path');
 
 const swaggerSpec = require('./config/swagger/index');
 const generalConfig = require('./config/general');
@@ -42,6 +44,19 @@ app.use(body({
 
 const router = require('./controllers/index');
 
+// Add Swagger routes before mounting router
+router.get('/api/swagger/spec.json', function* () {
+  this.type = 'application/json';
+  this.body = swaggerSpec;
+});
+
+// Serve Swagger UI HTML
+router.get('/api/swagger', function* () {
+  const swaggerHtmlPath = path.join(__dirname, 'public', 'swagger', 'index.html');
+  this.type = 'text/html';
+  this.body = fs.readFileSync(swaggerHtmlPath, 'utf8');
+});
+
 app.use(swagger.init({
   swaggerVersion: '2.0',
   swaggerURL: '/api/swagger',
@@ -50,10 +65,6 @@ app.use(swagger.init({
 }));
 
 app.use(router.routes());
-
-app.use(router.get('/api/swagger/spec.json', function* () {
-  this.body = swaggerSpec;
-}).routes());
 
 app.on('error', (err, ctx) => {
   console.error('Application Error', err, ctx);
