@@ -1,0 +1,15 @@
+*.log
+*.log*
+site
+coverage
+files
+json-storage
+.vscode
+build
+dump
+tmp
+public
+.idea
+.gradle/**
+out/**
+.env

@@ -1,0 +1,10 @@
+/*
+ * Copyright (c) Extended System - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * Written by Extended System team (https://ext-system.com), 2015
+ */
+rootProject.name = 'admin-panel'
+
+

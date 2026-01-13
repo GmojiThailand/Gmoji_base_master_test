@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) E-System LLC - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * Written by E-System team (https://ext-system.com), 2017
+ */
+buildscript {
+  configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+  }
+}
+wrapper {
+  gradleVersion = '5.5.1'
+}
+
+apply plugin: 'base'
+apply from: "build-${profile}.gradle"
+
+task packAwsZip(type: Zip) {
+  archiveFileName = "base.zip"
+  destinationDirectory = file("${project.projectDir}/out")
+  from("${project.projectDir}/config") {
+    exclude 'general.js', 'sdk/develop.js', 'sdk/index.js', 'sdk/production.js'
+    into "config"
+  }
+  from("${project.projectDir}/controllers") {
+    into "controllers"
+  }
+  from("${project.projectDir}/deprecated") {
+    into "deprecated"
+  }
+  from("${project.projectDir}/models") {
+    into "models"
+  }
+  from("${project.projectDir}/configs/${country.toLowerCase()}") {
+    into "config"
+  }
+  from("${project.projectDir}/deploy")
+}
+
+task deployAws {
+  doLast {
+    def args = ["aws", "s3", "cp", "${project.projectDir}/out/base.zip", "s3://${awsBucket}/${awsType}/${awsCountry}/base/base.zip"]
+    if(project.hasProperty('awsEndpoint')) {
+      args << '--endpoint-url' << awsEndpoint
+    }
+    exec {
+      commandLine args
+    }
+    exec {
+      commandLine "aws", "deploy", "create-deployment", "--region", "${awsRegion}", "--application-name", "${awsCountry}-${awsType}-Base",
+        "--deployment-config-name", "CodeDeployDefault.OneAtATime", "--deployment-group-name", "master",
+        "--s3-location", "bucket=${awsBucket},bundleType=zip,key=${awsType}/${awsCountry}/base/base.zip"
+    }
+  }
+}
+deployAws.dependsOn packAwsZip

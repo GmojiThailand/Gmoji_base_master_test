@@ -1,0 +1,13 @@
+/*
+ * Copyright (c) E-System LLC - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * Written by E-System team (https://ext-system.com), 2019
+ */
+
+ext.country = "AM"
+ext.awsCountry = "AM"
+ext.awsBucket = "gmoji-codedeploy-eu-central-1"
+ext.awsRegion = "eu-central-1"
+ext.awsType = "develop"

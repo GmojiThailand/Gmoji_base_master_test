@@ -1,0 +1,50 @@
+{
+  "_args": [
+    [
+      "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#gmoji",
+      "/builds/gmoji/base"
+    ]
+  ],
+  "_from": "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#gmoji",
+  "_id": "sdk@git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#7950afe12877590a1f9cf1ca4083329b9df628fe",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/sdk",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#gmoji",
+    "rawSpec": "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#gmoji",
+    "saveSpec": "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#gmoji",
+    "fetchSpec": "git@gitlab.simbirsoft:api-factory/SDK.git",
+    "gitCommittish": "gmoji"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#7950afe12877590a1f9cf1ca4083329b9df628fe",
+  "_spec": "git+ssh://git@gitlab.simbirsoft:api-factory/SDK.git#gmoji",
+  "_where": "/builds/gmoji/base",
+  "author": "",
+  "dependencies": {
+    "koa-router": "5.4.0",
+    "ldapjs": "^1.0.1",
+    "md5": "^2.2.1",
+    "mongoose": "^6.9.1",
+    "oauth2-server": "^2.4.1",
+    "request": "^2.79.0",
+    "uuid": "^3.3.2"
+  },
+  "description": "",
+  "devDependencies": {
+    "eslint": "^4.13.1",
+    "eslint-config-google": "^0.8.0"
+  },
+  "license": "ISC",
+  "main": "index.js",
+  "name": "sdk",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.0"
+}

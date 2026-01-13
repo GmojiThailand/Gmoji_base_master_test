@@ -1,0 +1,121 @@
+image: docker:stable
+
+stages:
+  - build
+  - deploy
+
+variables:
+  DEPLOYMENT_REPO: git@gitlab.simbirsoft:gmoji/ansible.git
+
+before_script:
+  - export TAG="${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}"
+
+build:
+  image: node:8-alpine
+  stage: build
+  script:
+    - apk add --no-cache git openssh-client python make
+    - mkdir -p ~/.ssh/
+    - echo -e "Host *\n\rStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - echo "$DEPLOYMENT_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - rm -rf node_modules/sdk
+    - npm install --production
+    - cd node_modules/sdk && npm install --production && cd ../..
+    - echo "${TAG}" > version.txt
+    - tar -cpzf "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" --exclude=.git --exclude=.npm ./
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-base"
+    paths:
+      - .npm/
+      - node_modules/
+  artifacts:
+    name: "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base"
+    expire_in: 3 week
+    when: on_success
+    paths:
+      - "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz"
+  only:
+    - develop
+    - test
+    - master
+  tags:
+    - docker
+
+deploy_to_dev:
+  image: dr.simbirsoft1.com/library/ansible:2.4
+  stage: deploy
+  variables:
+    CURRENT_DEPLOYMENT_KEY: "$DEPLOYMENT_KEY"
+    CURRENT_DEPLOYMENT_ENV: "dev"
+  script:
+    - mkdir -p ~/.ssh/
+    - echo -e "Host *\n\rStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - echo "$CURRENT_DEPLOYMENT_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - git clone $DEPLOYMENT_REPO ~/deploy
+    - mv "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" ~/deploy
+    - cd ~/deploy
+    - git checkout feature/new_ci
+    - ansible-playbook -i environments/${CURRENT_DEPLOYMENT_ENV}/inventory deploy.yaml --tags=base --extra-vars "project_base_package=${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" -u gitlab-runner
+  when: always
+  only:
+    - develop
+  environment:
+    name: dev
+    url: https://gmoji-dev.simbirsoft1.com
+
+deploy_to_test:
+  image: dr.simbirsoft1.com/library/ansible:2.4
+  stage: deploy
+  variables:
+    CURRENT_DEPLOYMENT_KEY: "$DEPLOYMENT_KEY"
+    CURRENT_DEPLOYMENT_ENV: "test"
+  script:
+    - mkdir -p ~/.ssh/
+    - echo -e "Host *\n\rStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - echo "$CURRENT_DEPLOYMENT_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - git clone $DEPLOYMENT_REPO ~/deploy
+    - mv "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" ~/deploy
+    - cd ~/deploy
+    - git checkout feature/new_ci
+    - ansible-playbook -i environments/${CURRENT_DEPLOYMENT_ENV}/inventory deploy.yaml --tags=base --extra-vars "project_base_package=${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" -u gitlab-runner
+  when: manual
+  only:
+    - test
+  environment:
+    name: test
+    url: https://gmoji-test.simbirsoft1.com
+
+deploy_to_predprod:
+  image: dr.simbirsoft1.com/library/ansible:2.4
+  stage: deploy
+  variables:
+    CURRENT_DEPLOYMENT_KEY: "$DEPLOYMENT_KEY"
+    CURRENT_DEPLOYMENT_ENV: "predprod"
+  script:
+    - mkdir -p ~/.ssh/
+    - echo -e "Host *\n\rStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - echo "$CURRENT_DEPLOYMENT_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - git clone $DEPLOYMENT_REPO ~/deploy
+    - mv "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" ~/deploy
+    - cd ~/deploy
+    - git checkout feature/new_ci
+    - ansible-playbook -i environments/${CURRENT_DEPLOYMENT_ENV}/inventory deploy.yaml --tags=base --extra-vars "project_base_package=${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHA:0:8}-base.tgz" -u gitlab-runner
+  when: manual
+  only:
+    - master
+  environment:
+    name: predprod
+    url: https://gmoji-predprod.simbirsoft1.com
+

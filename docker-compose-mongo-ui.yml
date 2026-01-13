@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: 172.17.0.2
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: pass
+    networks:
+      - default
+    depends_on:
+      - mongo42
+
+networks:
+  default:
+    external: true
+    name: bridge
+

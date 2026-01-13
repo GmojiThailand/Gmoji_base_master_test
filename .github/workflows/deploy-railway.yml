@@ -1,0 +1,21 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  railway-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Railway Login & Deploy
+        env:
+          RAILWAY_API_KEY: ${{ secrets.RAILWAY_API_KEY }}
+        run: |
+          curl -sS https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
+          railway login --apiKey $RAILWAY_API_KEY
+          railway up --service "<your-service-name>" --environment production
+
+# Note: Replace <your-service-name> with your Railway service name. This action uses Railway CLI and requires
+# a Railway API key stored in repository secrets as RAILWAY_API_KEY.

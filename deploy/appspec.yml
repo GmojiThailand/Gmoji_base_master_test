@@ -1,0 +1,38 @@
+version: 0.0
+os: linux
+files:
+    - source: /
+      destination: /opt/gmoji/base/current
+hooks:
+  ApplicationStop:
+    - location: codedeploy/stop_server.sh
+      timeout: 300
+      runas: gmoji
+  BeforeInstall:
+    - location: codedeploy/cleanup.sh
+      timeout: 300
+      runas: root
+  AfterInstall:
+    - location: codedeploy/install_dependencies.sh
+      timeout: 300
+      runas: root
+    - location: codedeploy/mount_efs.sh
+      timeout: 300
+      runas: root
+    - location: codedeploy/get_env_vars.sh
+      timeout: 300
+      runas: root
+    - location: codedeploy/change_permissions.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: codedeploy/start_server.sh
+      timeout: 300
+      runas: gmoji
+    - location: codedeploy/restart_nginx.sh
+      timeout: 300
+      runas: root
+  ValidateService:
+    - location: codedeploy/validate.sh
+      timeout: 300
+      runas: root

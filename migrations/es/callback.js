@@ -1,0 +1,1 @@
+db.entities.update({'name': 'notify'}, { $set: { 'options.routes.call_back.params.bcc': 'orders@gmoji.am' } });

@@ -1,0 +1,32 @@
+{
+  "extends": "google",
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "rules": {
+    "require-jsdoc": [
+      "error",
+      {
+        "require": {
+          "FunctionDeclaration": false,
+          "MethodDefinition": false,
+          "ClassDeclaration": false,
+          "ArrowFunctionExpression": false
+        }
+      }
+    ],
+    "max-len": ["error", {"code": 160}],
+    "camelcase": [ 0, {"properties": "never"}],
+    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "no-tabs": 2,
+    "no-mixed-spaces-and-tabs": "error",
+    "no-invalid-this": 0,
+    "brace-style": ["error", "1tbs", {"allowSingleLine": true}],
+    "curly": "error",
+    "block-spacing": ["error", "always"]
+  }
+}
+

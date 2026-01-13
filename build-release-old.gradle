@@ -1,0 +1,12 @@
+/*
+ * Copyright (c) E-System LLC - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * Written by E-System team (https://ext-system.com), 2019
+ */
+
+ext.country = "OLD"
+ext.awsCountry = "OLD"
+ext.awsBucket = "s3://gmoji-codedeploy"
+ext.awsType = "production"

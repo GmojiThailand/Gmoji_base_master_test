@@ -1,0 +1,38 @@
+{
+  "name": "base",
+  "version": "0.0.4",
+  "scripts": {
+    "start": "node app.js",
+    "check-db": "node check_database.js",
+    "rebuild-indexes": "node scripts/rebuild-indexes.js",
+    "generate-mongo-url": "node scripts/generate-mongodb-url.js",
+    "dump-db": "node scripts/dump-db.js",
+    "restore-db": "node scripts/restore-db.js",
+    "restore-from-dump": "node scripts/restore-from-dump.js",
+    "create-application": "node scripts/create-application.js",
+    "create-admin": "node scripts/create-admin-user.js",
+    "migrate-to-atlas": "node scripts/migrate-to-atlas.js",
+    "setup": "node scripts/setup-and-check.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "co": "^4.6.0",
+    "cyrillic-to-translit-js": "^2.0.0",
+    "dotenv": "^16.1.4",
+    "koa": "^1.2.4",
+    "koa-better-body": "^3.0.4",
+    "koa-cors": "0.0.16",
+    "koa-morgan": "^0.4.0",
+    "koa-qs": "^2.0.0",
+    "koa-router": "5.4.0",
+    "request": "^2.85.0",
+    "request-promise": "^4.2.2",
+    "sdk": "file:./vendor/sdk",
+    "swagger-koa": "^1.0.10",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-google": "^0.8.0"
+  }
+}

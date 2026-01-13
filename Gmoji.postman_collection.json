@@ -1,0 +1,1512 @@
+{
+  "info": {
+    "name": "Gmoji API",
+    "description": "Postman collection generated from the Swagger definition in config/swagger.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authorization",
+      "description": "คำขอทั้งหมดที่เกี่ยวกับการรับและรีเฟรชโทเคนสำหรับผู้ใช้และผู้ดูแลระบบ",
+      "item": [
+        {
+          "name": "Mobile User Authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic NTg3NjQwYzk5NWVkM2MwYzU5YjE0NjAwOjg4YmYxY2Q3MGQ=",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "username",
+                  "value": "{{mobileUsername}}",
+                  "type": "text",
+                  "description": "Phone number or login",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.response) { return; }",
+                  "try {",
+                  "  const jsonData = pm.response.json();",
+                  "  const data = jsonData.data || jsonData;",
+                  "  const code = data && (data.code || data.auth_code);",
+                  "  const smsCode = data && (data.sms_code || data.smsCode);",
+                  "  if (code) {",
+                  "    pm.environment.set('authCode', code);",
+                  "  }",
+                  "  if (smsCode) {",
+                  "    pm.environment.set('authSmsCode', smsCode);",
+                  "  }",
+                  "  const usernameField = (pm.request.body && pm.request.body.mode === 'formdata')",
+                  "    ? pm.request.body.toJSON().formdata.find((item) => item.key === 'username' && !item.disabled)",
+                  "    : null;",
+                  "  if (usernameField && usernameField.value) {",
+                  "    pm.environment.set('mobileUsername', usernameField.value);",
+                  "  }",
+                  "  const loginUrl = pm.variables.replaceIn('{{baseUrl}}/api/v1/login');",
+                  "  const authHeader = pm.request.headers.get('Authorization');",
+                  "  const appIdHeader = pm.request.headers.get('X-Api-Factory-Application-Id');",
+                  "  if (code && smsCode && loginUrl && authHeader && appIdHeader) {",
+                  "    const loginRequest = {",
+                  "      url: loginUrl,",
+                  "      method: 'POST',",
+                  "      header: [",
+                  "        {key: 'Authorization', value: authHeader},",
+                  "        {key: 'X-Api-Factory-Application-Id', value: appIdHeader}",
+                  "      ],",
+                  "      body: {",
+                  "        mode: 'formdata',",
+                  "        formdata: [",
+                  "          {key: 'code', value: code, type: 'text'},",
+                  "          {key: 'sms_code', value: smsCode, type: 'text'}",
+                  "        ]",
+                  "      }",
+                  "    };",
+                  "    pm.sendRequest(loginRequest, function (err, res) {",
+                  "      if (err || !res) {",
+                  "        console.log('Auto login request failed', err);",
+                  "        return;",
+                  "      }",
+                  "      try {",
+                  "        const loginJson = res.json();",
+                  "        const loginToken = loginJson.token || loginJson.access_token;",
+                  "        const loginAccessToken = loginToken && (loginToken.accessToken || loginToken.access_token || loginToken);",
+                  "        if (loginAccessToken) {",
+                  "          pm.environment.set('authToken', loginAccessToken);",
+                  "        }",
+                  "        const loginRefresh = loginJson.refresh_token || (loginJson.token && loginJson.token.refreshToken);",
+                  "        if (loginRefresh) {",
+                  "          pm.environment.set('refreshToken', loginRefresh);",
+                  "        }",
+                  "      } catch (loginErr) {",
+                  "        console.log('Unable to parse auto login response', loginErr);",
+                  "      }",
+                  "    });",
+                  "  }",
+                  "} catch (err) {",
+                  "  console.log('Unable to parse mobile auth response', err);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mobile User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic NTg3NjQwYzk5NWVkM2MwYzU5YjE0NjAwOjg4YmYxY2Q3MGQ=",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "code",
+                  "value": "{{authCode}}",
+                  "type": "text",
+                  "description": "One-time code",
+                  "disabled": false
+                },
+                {
+                  "key": "sms_code",
+                  "value": "{{authSmsCode}}",
+                  "type": "text",
+                  "description": "SMS confirmation code",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.response) { return; }",
+                  "try {",
+                  "  const jsonData = pm.response.json();",
+                  "  const token = jsonData.token || jsonData.access_token;",
+                  "  const accessToken = token && (token.accessToken || token.access_token || token);",
+                  "  if (accessToken) {",
+                  "    pm.environment.set('authToken', accessToken);",
+                  "  }",
+                  "  const refresh = jsonData.refresh_token || (jsonData.token && jsonData.token.refreshToken);",
+                  "  if (refresh) {",
+                  "    pm.environment.set('refreshToken', refresh);",
+                  "  }",
+                  "} catch (err) {",
+                  "  console.log('Unable to parse login response', err);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Mobile User Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "user_id",
+                  "value": "",
+                  "type": "text",
+                  "description": "Mobile user identifier",
+                  "disabled": false
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional display name",
+                  "disabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional email",
+                  "disabled": true
+                },
+                {
+                  "key": "birthdate",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional birthdate",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/edit_profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "edit_profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Authorization Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic NTg3NjQwYzk5NWVkM2MwYzU5YjE0NjAwOjg4YmYxY2Q3MGQ=",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "refresh_token",
+                  "value": "",
+                  "type": "text",
+                  "description": "Refresh token",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "refresh"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.response) { return; }",
+                  "try {",
+                  "  const jsonData = pm.response.json();",
+                  "  const token = jsonData.token || jsonData.access_token;",
+                  "  const accessToken = token && (token.accessToken || token.access_token || token);",
+                  "  if (accessToken) {",
+                  "    pm.environment.set('authToken', accessToken);",
+                  "  }",
+                  "  const refresh = jsonData.refresh_token || (jsonData.token && jsonData.token.refreshToken);",
+                  "  if (refresh) {",
+                  "    pm.environment.set('refreshToken', refresh);",
+                  "  }",
+                  "} catch (err) {",
+                  "  console.log('Unable to parse refresh response', err);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic NTg3NjQwYzk5NWVkM2MwYzU5YjE0NjAwOjg4YmYxY2Q3MGQ=",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"example@example.ru\",\n  \"password\": \"ExamplePassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login_administration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login_administration"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.response) { return; }",
+                  "try {",
+                  "  const jsonData = pm.response.json();",
+                  "  const token = jsonData.token;",
+                  "  const accessToken = token && (token.accessToken || token.access_token || token);",
+                  "  if (accessToken) {",
+                  "    pm.environment.set('authToken', accessToken);",
+                  "  }",
+                  "  const refresh = jsonData.refresh_token || (token && token.refreshToken);",
+                  "  if (refresh) {",
+                  "    pm.environment.set('refreshToken', refresh);",
+                  "  }",
+                  "} catch (err) {",
+                  "  console.log('Unable to parse admin login response', err);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subcontractor Authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic NTg3NjQwYzk5NWVkM2MwYzU5YjE0NjAwOjg4YmYxY2Q3MGQ=",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"examplename\",\n  \"is_subcontragent\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login_administration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login_administration"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.response) { return; }",
+                  "try {",
+                  "  const jsonData = pm.response.json();",
+                  "  const token = jsonData.token;",
+                  "  const accessToken = token && (token.accessToken || token.access_token || token);",
+                  "  if (accessToken) {",
+                  "    pm.environment.set('authToken', accessToken);",
+                  "  }",
+                  "  const refresh = jsonData.refresh_token || (token && token.refreshToken);",
+                  "  if (refresh) {",
+                  "    pm.environment.set('refreshToken', refresh);",
+                  "  }",
+                  "} catch (err) {",
+                  "  console.log('Unable to parse subcontragent login response', err);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contragent",
+      "description": "จัดการข้อมูลและการแก้ไขรายละเอียดของคู่ค้า (Contragent)",
+      "item": [
+        {
+          "name": "Create Contragent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/create_new_ca",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "create_new_ca"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Edit Contragent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"598aa3c747217f28ba69b59d\",\n  \"email\": \"example@example.ru\",\n  \"name\": \"Новое название контрагента\",\n  \"phone\": \"1234567890\",\n  \"fact_city\": \"Москва\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/edit_ca",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "edit_ca"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mobile",
+      "description": "เอ็นด์พอยต์ที่ใช้กับแอปพลิเคชันมือถือ เช่น โปรไฟล์และข้อมูลที่เชื่อมกับสินค้า",
+      "item": [
+        {
+          "name": "Update Mobile User Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"example@example.ru\",\n  \"name\": \"Testname\",\n  \"birthdate\": 824760000000,\n  \"sex\": \"M\",\n  \"city\": \"Екатеринбург\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/edit_profile_mobile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "edit_profile_mobile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Contragents By Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"58da09095c7b2513f35c433c\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/contragents_by_product",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contragents_by_product"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1C Accounting Export",
+      "description": "เอ็นด์พอยต์สำหรับดึงข้อมูลไปยังระบบบัญชี 1C ทั้งแบบข้อมูลรวมและแบบละเอียด",
+      "item": [
+        {
+          "name": "1C Export (Detailed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inn\": \"83816173234\",\n  \"api_key\": \"RE8gVSBLTk9XIERBIFdBWSBNWSBCUlVEREE=\",\n  \"details\": true,\n  \"begin_date\": 1507193048591,\n  \"end_date\": 1507887198401\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/one_s_accounting_export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "one_s_accounting_export"
+              ]
+            },
+            "description": "Используйте параметр details=true для выгрузки детальной информации по Gpon."
+          }
+        },
+        {
+          "name": "1C Export (Summary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inn\": \"83816173234\",\n  \"api_key\": \"RE8gVSBLTk9XIERBIFdBWSBNWSBCUlVEREE=\",\n  \"begin_date\": 1507193048591,\n  \"end_date\": 1507887198401\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/one_s_accounting_export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "one_s_accounting_export"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Contragent Card",
+      "description": "การจัดการการ์ดของคู่ค้าในสินค้า รวมถึงการสร้าง แก้ไข ลบ และดูรายการ",
+      "item": [
+        {
+          "name": "List Stores for Contragent Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contragent_id\": \"5a1bf228b6b7e15bf965239e\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/contragent_card_stores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contragent_card_stores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Contragent Cards for Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"58da09095c7b2513f35c433c\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/get_product_contragent_cards",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "get_product_contragent_cards"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Product Contragent Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contragent_id\": \"5a1bf228b6b7e15bf965239e\",\n  \"product_id\": \"58da09095c7b2513f35c433c\",\n  \"commission_individual\": -1,\n  \"stores\": [\n    \"598bffb947217f28ba69d016\",\n    \"598c000e47217f28ba69d024\",\n    \"598c008547217f28ba69d02c\"\n  ],\n  \"product_name_aliase\": \"Test Product Name Aliase\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/create_product_contragent_card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "create_product_contragent_card"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Product Contragent Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"card_id\": \"5a8e952254141a36a8daf839\",\n  \"commission_individual\": 3,\n  \"stores\": [\n    \"598c008547217f28ba69d02c\"\n  ],\n  \"product_name_aliase\": \"Test Product Name Aliase Change\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/edit_product_contragent_card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "edit_product_contragent_card"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Product Contragent Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"card_id\": \"5a8e952254141a36a8daf839\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/delete_product_contragent_card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "delete_product_contragent_card"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Push",
+      "description": "การทำงานเกี่ยวกับ Push Token สำหรับอุปกรณ์ของผู้ใช้",
+      "item": [
+        {
+          "name": "Add Push Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "type",
+                  "value": "",
+                  "type": "text",
+                  "description": "ios | android",
+                  "disabled": false
+                },
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "text",
+                  "description": "Device token",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/add_push",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "add_push"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Push Tokens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic NTg3NjQwYzk5NWVkM2MwYzU5YjE0NjAwOjg4YmYxY2Q3MGQ=",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/get_push",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "get_push"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "",
+                  "description": "Optional filter by user",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RoleController",
+      "description": "ตั้งค่าบทบาทและสิทธิ์การเข้าถึงของผู้ใช้ในระบบ",
+      "item": [
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/list_role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "list_role"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/get_role?id={{roleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "get_role"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{roleId}}",
+                  "description": "Role identifier",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Edit Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "type": "text",
+                  "description": "Role identifier",
+                  "disabled": false
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional new name",
+                  "disabled": true
+                },
+                {
+                  "key": "permissions",
+                  "value": "{ \"enable\": [\"id\"], \"disable\": [] }",
+                  "type": "text",
+                  "description": "JSON string with permissions payload",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/edit_role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "edit_role"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "type": "text",
+                  "description": "Role identifier",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/delete_role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "delete_role"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name_ru",
+                  "value": "",
+                  "type": "text",
+                  "description": "Role name (RU)",
+                  "disabled": false
+                },
+                {
+                  "key": "permissions",
+                  "value": "[\"permission_id_1\", \"permission_id_2\"]",
+                  "type": "text",
+                  "description": "Array of permission IDs",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/create_role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "create_role"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Role Permissions Match",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "permissions",
+                  "value": "[\"permission_id_1\", \"permission_id_2\"]",
+                  "type": "text",
+                  "description": "Array of permission IDs",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/check_same_role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "check_same_role"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Store",
+      "description": "สร้างและแก้ไขข้อมูลร้านค้า/จุดให้บริการของคู่ค้า",
+      "item": [
+        {
+          "name": "Create Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contragent\": \"598aa3c747217f28ba69b59e\",\n  \"user_id\": \"598aa3c747217f28ba69b59d\",\n  \"name\": \"Store name\",\n  \"geo\": [54.3131231, 48.38524589999997],\n  \"city\": \"г. Ульяновск\",\n  \"street\": \"ул. Ленина\",\n  \"building\": \"47\",\n  \"subcontragent_name\": \"Store subcontragent name\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/create_store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "create_store"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Edit Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"5a856053ac02eb4634067504\",\n  \"name\": \"New store name\",\n  \"geo\": [54.3131231, 48.38524589999997],\n  \"city\": \"г. Ульяновск\",\n  \"street\": \"ул. Ленина\",\n  \"building\": \"47\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/edit_store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "edit_store"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Utils",
+      "description": "เครื่องมือเสริมสำหรับปรับลำดับข้อมูลและตรวจสอบความซ้ำของข้อมูลผู้ใช้",
+      "item": [
+        {
+          "name": "Change Sequence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "old_position",
+                  "value": "",
+                  "type": "text",
+                  "description": "Current position",
+                  "disabled": false
+                },
+                {
+                  "key": "new_position",
+                  "value": "",
+                  "type": "text",
+                  "description": "New position",
+                  "disabled": false
+                },
+                {
+                  "key": "table_name",
+                  "value": "",
+                  "type": "text",
+                  "description": "Target table name",
+                  "disabled": false
+                },
+                {
+                  "key": "category_id",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional category id",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change_sequence",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "change_sequence"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Unique Parameters",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Api-Factory-Application-Id",
+                "value": "587640c995ed3c0c59b14600",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"example@example.com\",\n  \"name\": \"Example\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/check_unique_params",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "check_unique_params"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:3001",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
+

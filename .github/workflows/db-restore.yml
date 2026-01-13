@@ -1,0 +1,65 @@
+name: Manual DB Restore
+
+on:
+  workflow_dispatch:
+    inputs:
+      drop:
+        description: 'Drop existing collections before restore (true/false)'
+        required: false
+        default: 'true'
+      backup:
+        description: 'Create a pre-restore backup and upload as artifact (true/false)'
+        required: false
+        default: 'true'
+
+jobs:
+  restore-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Docker
+        uses: actions/setup-docker@v2
+
+      - name: Optional: Take pre-restore DB backup (artifact)
+        if: ${{ github.event.inputs.backup == 'true' || github.event.inputs.backup == 'True' }}
+        env:
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+        run: |
+          echo "Creating backup..."
+          BACKUP_DIR="${{ github.workspace }}/backup"
+          mkdir -p "$BACKUP_DIR"
+          docker run --rm -v "$BACKUP_DIR:/backup" mongo:8.2.1 mongodump --uri "$MONGODB_URL" --archive=/backup/backup.archive
+          ls -la "$BACKUP_DIR"
+      - name: Upload backup artifact
+        if: ${{ github.event.inputs.backup == 'true' || github.event.inputs.backup == 'True' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-artifact
+          path: backup/backup.archive
+
+      - name: Restore DB from repo dump
+        env:
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+        run: |
+          if [ -z "$MONGODB_URL" ]; then
+            echo "MONGODB_URL secret not set. Please set it in repository secrets before running this workflow.";
+            exit 1;
+          fi
+          DUMP_DIR="${{ github.workspace }}/migrations/release_dump_18_07_2018_17_50"
+          if [ ! -d "$DUMP_DIR" ]; then
+            echo "Dump folder not found: $DUMP_DIR";
+            exit 1;
+          fi
+          DROP_FLAG=""
+          if [ "${{ github.event.inputs.drop }}" = "true" ] || [ "${{ github.event.inputs.drop }}" = "True" ]; then
+            DROP_FLAG="--drop"
+          fi
+          docker run --rm -v "$DUMP_DIR:/dump" mongo:8.2.1 mongorestore --uri "$MONGODB_URL" --nsInclude "api-factory.*" $DROP_FLAG /dump
+
+      - name: Run DB check
+        env:
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+        run: |
+          npm ci
+          npm run check-db

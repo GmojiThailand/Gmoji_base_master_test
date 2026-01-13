@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"api-factory.entities"},{"v":1,"unique":true,"key":{"name":1,"application":1},"name":"name_1_application_1","background":true,"ns":"api-factory.entities"}]}
