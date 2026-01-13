@@ -5,14 +5,12 @@ const Koa = require('koa');
 const morgan = require('koa-morgan');
 const body = require('koa-better-body');
 const cors = require('koa-cors');
-const SDK = require('sdk');
 const swagger = require('swagger-koa');
 const fs = require('fs');
 const path = require('path');
 
 const swaggerSpec = require('./config/swagger/index');
 const generalConfig = require('./config/general');
-const sdkConfig = require('./config/sdk')();
 
 const app = new Koa();
 
@@ -21,7 +19,24 @@ const app = new Koa();
 const hostname = (generalConfig.hostname || generalConfig.host) ? (generalConfig.hostname || generalConfig.host) : '0.0.0.0';
 const port = generalConfig.port ? generalConfig.port : '3001';
 
-SDK.configure(sdkConfig);
+// Initialize SDK config only if not in serverless or if MongoDB URL is available
+// This prevents MongoDB connection attempts when DB is not configured
+// Load SDK conditionally to avoid MongoDB connection errors
+try {
+  // Check if MongoDB URL is available before configuring SDK
+  const hasMongoUrl = process.env.MONGODB_URL || process.env.MONGO_URL || 
+                      process.env.MONGO_PUBLIC_URL || process.env.MONGO_URI;
+  
+  if (hasMongoUrl || !process.env.VERCEL) {
+    const SDK = require('sdk');
+    const sdkConfig = require('./config/sdk')();
+    SDK.configure(sdkConfig);
+  } else {
+    console.warn('MongoDB URL not found. SDK will not be initialized. Some features may not work.');
+  }
+} catch (e) {
+  console.warn('SDK configuration skipped:', e.message);
+}
 
 require('koa-qs')(app, 'extended');
 
