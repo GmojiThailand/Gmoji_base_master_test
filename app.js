@@ -14,7 +14,7 @@ const swaggerSpec = require('./config/swagger/index');
 const generalConfig = require('./config/general');
 const sdkConfig = require('./config/sdk')();
 
-const app = module.exports = new Koa();
+const app = new Koa();
 
 // Use `hostname` from config if present; fall back to 0.0.0.0 to allow external
 // access when running in containers or on remote hosts.
@@ -50,9 +50,21 @@ router.get('/api/swagger/spec.json', function* () {
   this.body = swaggerSpec;
 });
 
-// Serve Swagger UI HTML
+// Serve Swagger UI HTML - use process.cwd() for Vercel compatibility
 router.get('/api/swagger', function* () {
-  const swaggerHtmlPath = path.join(__dirname, 'public', 'swagger', 'index.html');
+  // Try multiple path resolutions for compatibility
+  let swaggerHtmlPath;
+  try {
+    // First try __dirname (works locally)
+    swaggerHtmlPath = path.join(__dirname, 'public', 'swagger', 'index.html');
+    if (!fs.existsSync(swaggerHtmlPath)) {
+      // Fallback to process.cwd() (works on Vercel)
+      swaggerHtmlPath = path.join(process.cwd(), 'public', 'swagger', 'index.html');
+    }
+  } catch (e) {
+    swaggerHtmlPath = path.join(process.cwd(), 'public', 'swagger', 'index.html');
+  }
+  
   this.type = 'text/html';
   this.body = fs.readFileSync(swaggerHtmlPath, 'utf8');
 });
@@ -70,6 +82,27 @@ app.on('error', (err, ctx) => {
   console.error('Application Error', err, ctx);
 });
 
-app.listen(port, hostname, () => {
-  console.log(`Server started on ${hostname}:${port}`);
-});
+// Only listen if not in serverless environment (Vercel)
+if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
+  app.listen(port, hostname, () => {
+    console.log(`Server started on ${hostname}:${port}`);
+  });
+}
+
+// Export handler for Vercel serverless
+// Vercel will automatically use this when using @vercel/node
+// For Koa 1.x, we need to use serverless-http adapter
+if (process.env.VERCEL || process.env.VERCEL_ENV) {
+  try {
+    const serverless = require('serverless-http');
+    module.exports = serverless(app.callback());
+  } catch (e) {
+    // If serverless-http is not installed, export app directly
+    // @vercel/node should handle Koa apps
+    console.warn('serverless-http not found, using default export');
+    module.exports = app;
+  }
+} else {
+  // Export app for local development
+  module.exports = app;
+}
