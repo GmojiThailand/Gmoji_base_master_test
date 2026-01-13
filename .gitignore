@@ -13,3 +13,4 @@ public
 .gradle/**
 out/**
 .env
+node_modules

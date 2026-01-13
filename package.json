@@ -12,7 +12,8 @@
     "create-application": "node scripts/create-application.js",
     "create-admin": "node scripts/create-admin-user.js",
     "migrate-to-atlas": "node scripts/migrate-to-atlas.js",
-    "setup": "node scripts/setup-and-check.js"
+    "setup": "node scripts/setup-and-check.js",
+    "postinstall": "cd vendor/sdk && npm install --production || true"
   },
   "dependencies": {
     "@vercel/node": "^3.0.0",
