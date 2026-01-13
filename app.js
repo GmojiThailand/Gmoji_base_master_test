@@ -80,10 +80,21 @@ router.get('/api/swagger', function* () {
     swaggerHtmlPath = path.join(process.cwd(), 'public', 'swagger', 'index.html');
   }
   
+  if (!fs.existsSync(swaggerHtmlPath)) {
+    this.status = 500;
+    this.body = { error: 'Swagger UI file not found', path: swaggerHtmlPath };
+    return;
+  }
+  
   this.type = 'text/html';
   this.body = fs.readFileSync(swaggerHtmlPath, 'utf8');
 });
 
+// Mount router BEFORE swagger.init to ensure our routes take precedence
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+// Swagger init should come after router to avoid conflicts
 app.use(swagger.init({
   swaggerVersion: '2.0',
   swaggerURL: '/api/swagger',
@@ -91,7 +102,13 @@ app.use(swagger.init({
   basePath: '/api',
 }));
 
-app.use(router.routes());
+// Add a catch-all route for debugging (should be last)
+app.use(function* (next) {
+  if (this.status === 404) {
+    console.log('404 - Path not found:', this.path, 'Method:', this.method);
+  }
+  yield next;
+});
 
 app.on('error', (err, ctx) => {
   console.error('Application Error', err, ctx);
