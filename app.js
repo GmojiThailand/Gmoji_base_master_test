@@ -83,26 +83,12 @@ app.on('error', (err, ctx) => {
 });
 
 // Only listen if not in serverless environment (Vercel)
-if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
+// When running in api/ directory, Vercel will handle the serverless function
+if (!process.env.VERCEL && !process.env.VERCEL_ENV && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
   app.listen(port, hostname, () => {
     console.log(`Server started on ${hostname}:${port}`);
   });
 }
 
-// Export handler for Vercel serverless
-// Vercel will automatically use this when using @vercel/node
-// For Koa 1.x, we need to use serverless-http adapter
-if (process.env.VERCEL || process.env.VERCEL_ENV) {
-  try {
-    const serverless = require('serverless-http');
-    module.exports = serverless(app.callback());
-  } catch (e) {
-    // If serverless-http is not installed, export app directly
-    // @vercel/node should handle Koa apps
-    console.warn('serverless-http not found, using default export');
-    module.exports = app;
-  }
-} else {
-  // Export app for local development
-  module.exports = app;
-}
+// Export app for both local and serverless (api/index.js will wrap it)
+module.exports = app;

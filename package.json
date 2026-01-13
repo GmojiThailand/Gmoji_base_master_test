@@ -30,6 +30,7 @@
     "request-promise": "^4.2.2",
     "sdk": "file:./vendor/sdk",
     "serverless-http": "^3.2.0",
+    "socks": "^2.8.1",
     "swagger-koa": "^1.0.10",
     "uuid": "^3.1.0"
   },
